@@ -14,3 +14,17 @@ from train_utils.train_2d import train_2d_operator
 from models import FNN3d, FNN2d
 
 print('Finished Importing Libaries')
+
+# parse options
+parser = ArgumentParser(description='Basic paser')
+parser.add_argument('--config_path', type=str, help='Path to the configuration file')
+parser.add_argument('--log', action='store_true', help='Turn on the wandb')
+args = parser.parse_args()
+
+print('Finished Parsing')
+
+config_file = args.config_path
+with open(config_file, 'r') as stream:
+    config = yaml.load(stream, yaml.FullLoader)
+
+print('Finished Configuration')
