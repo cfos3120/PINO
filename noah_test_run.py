@@ -3,7 +3,7 @@ print('Hello World')
 import yaml
 from argparse import ArgumentParser
 import math
-#import torch
+import torch
 #from torch.utils.data import DataLoader
 
 #from solver.random_fields import GaussianRF
@@ -29,3 +29,7 @@ if __name__ == '__main__':
         config = yaml.load(stream, yaml.FullLoader)
 
     print('Finished Configuration')
+
+    t = torch.rand(10, 10)
+    rfftn = torch.fft.rfftn(t)
+    print(rfftn.size())
