@@ -31,7 +31,7 @@ train:
   xy_loss: 0
   save_dir: 'Re500'
   save_name: 'PINO-fintune-05s256.pt'
-  ckpt: '/home/cfos3120/checkpoints/Re500-FDM/PINO-pretrain-Re500-05s-4C0_artemis.pt'
+  #ckpt: '/home/cfos3120/checkpoints/Re500-FDM/PINO-pretrain-Re500-05s-4C0_artemis.pt'
 
 others:
   project: 'PINO-Re500-ICLR'
