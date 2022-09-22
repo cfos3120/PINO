@@ -7,4 +7,4 @@
 module load python/3.8.2 cuda/10.2.89 magma/2.5.3
 source /project/MLFluids/pytorch_1.11/bin/activate
 
-CUDA_VISIBLE_DEVICES=2 python3 /home/cfos3120/PINO/train_PINO3d.py --config_path /home/cfos3120/PINO_4D/yamls/Re500-finetune-05s4C0_artemis256.yaml
+CUDA_VISIBLE_DEVICES=2 python3 /home/cfos3120/PINO/train_PINO3d.py --config_path /home/cfos3120/PINO/configs/finetune/Re500-finetune-05s4C0_artemis256.yaml
