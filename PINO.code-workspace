@@ -8,7 +8,15 @@
 		},
 		{
 			"path": "..\\..\\0 - Work Space\\analytics_v1_PINO"
+		},
+		{
+			"path": "../PINO models"
+		},
+		{
+			"path": "../PINO_4D"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"fortran.fortls.disabled": true
+	}
 }
