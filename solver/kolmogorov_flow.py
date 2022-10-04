@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 
-from .random_fields import GaussianRF
+from random_fields import GaussianRF
 from timeit import default_timer
 import argparse
 
