@@ -47,7 +47,8 @@ def eval_ns(model,  # model
     else:
         pbar = dataloader
     loss_dict = {'train_f': 0.0,
-                 'test_l2': 0.0}
+                 'test_l2': 0.0,
+                 'test_ic': 0.0}
     start_time = default_timer()
     with torch.no_grad():
         for x, y in pbar:
@@ -61,17 +62,20 @@ def eval_ns(model,  # model
 
             loss_dict['train_f'] += loss_f
             loss_dict['test_l2'] += loss_l2
+            loss_dict['test_ic'] += loss_ic
             if device == 0 and use_tqdm:
                 pbar.set_description(
                     (
-                        f'Train f error: {loss_f.item():.5f}; Test l2 error: {loss_l2.item():.5f}'
+                        f'Train f error: {loss_f.item():.5f}; Test l2 error: {loss_l2.item():.5f}; Test ic error: {loss_ic.item():.5f}'
                     )
                 )
     end_time = default_timer()
     test_l2 = loss_dict['test_l2'].item() / len(dataloader)
     loss_f = loss_dict['train_f'].item() / len(dataloader)
+    loss_ic = loss_dict['loss_ic'].item() / len(dataloader)
     print(f'==Averaged relative L2 error is: {test_l2}==\n'
-          f'==Averaged equation error is: {loss_f}==')
+          f'==Averaged equation error is: {loss_f}==\n'
+          f'==Averaged intial condition error is: {loss_ic}==')
     print(f'Time cost: {end_time - start_time} s')
     if device == 0:
         if wandb and log:
@@ -79,6 +83,7 @@ def eval_ns(model,  # model
                 {
                     'Train f error': loss_f,
                     'Test L2 error': test_l2,
+                    # initial condition error
                 }
             )
             run.finish()
