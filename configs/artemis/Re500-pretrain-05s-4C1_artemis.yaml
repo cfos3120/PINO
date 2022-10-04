@@ -32,7 +32,7 @@ train:
   save_dir: 'cpuhourtesting'
   save_name: 'PINO-pretrain-Re500-05s-4C1_artemis.pt'
   data_iter: 4
-  eqn_iter: 0
+  eqn_iter: 1
 
 others:
   project: 'PINO-pretrain-ICLR'
