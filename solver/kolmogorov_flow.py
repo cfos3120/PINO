@@ -170,7 +170,7 @@ if __name__ == '__main__':
     Re = opt.re
 
     T_in = 100.0
-    T = 100
+    T = 1 #100
     t = 64
     dt = 1.0 / t
 
