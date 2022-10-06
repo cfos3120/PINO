@@ -164,8 +164,8 @@ if __name__ == '__main__':
     opt = parser.parse_args()
 
     device = torch.device('cuda:0')
-    s = 1024
-    sub = 4
+    s = 256 #1024
+    sub = 1
     n = 4
     Re = opt.re
 
@@ -194,4 +194,5 @@ if __name__ == '__main__':
         sol_ini = sol[i, -1, :, :]
 
     # np.save('NS_fine_Re500_S512_s64_T500_t128.npy', sol)
-    np.save('NS_fine_Re' + str(int(Re)) + '_T' + str(t) + '_part' + str(opt.part) + '.npy', sol)
+    #np.save('NS_fine_Re' + str(int(Re)) + '_T' + str(t) + '_part' + str(opt.part) + '.npy', sol)
+    np.save('NS_fine_Re' + str(int(Re)) + '_T' + str(t) + '_R' + str(s) +'_sub' + str(sub) + '.npy', sol)

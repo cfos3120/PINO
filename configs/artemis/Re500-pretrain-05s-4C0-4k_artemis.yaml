@@ -30,7 +30,7 @@ train:
   f_loss: 1.0
   xy_loss: 5.0
   save_dir: 'cpuhourtesting'
-  save_name: 'PINO-pretrain-Re500-05s-4C0_artemis.pt'
+  save_name: 'PINO-pretrain-Re500-05s-4C0-4k_artemis.pt'
   data_iter: 4
   eqn_iter: 0
 
