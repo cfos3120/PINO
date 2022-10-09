@@ -48,7 +48,7 @@ def eval_ns(model,  # model
         pbar = dataloader
     loss_dict = {'train_f': 0.0,
                  'test_l2': 0.0,
-                 'test_ic': 0.0}
+                 'loss_ic': 0.0}
     start_time = default_timer()
     with torch.no_grad():
         for x, y in pbar:
@@ -62,7 +62,7 @@ def eval_ns(model,  # model
 
             loss_dict['train_f'] += loss_f
             loss_dict['test_l2'] += loss_l2
-            loss_dict['test_ic'] += loss_ic
+            loss_dict['loss_ic'] += loss_ic
             if device == 0 and use_tqdm:
                 pbar.set_description(
                     (
