@@ -20,7 +20,7 @@ model:
 
 test:
   batchsize: 1
-  ckpt: '/home/cfos3120/checkpoints/Re500-FDM/PINO-pretrain-Re500-05s-4C0_artemis.pt'
+  ckpt: '/home/cfos3120/checkpoints/cpuhourtesting/PINO-pretrain-Re500-05s-4C0_artemis.pt'
 
 others:
   project: 'PINO-None'
