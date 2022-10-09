@@ -6,7 +6,7 @@ data:
   n_sample: 1
   time_interval: 0.5
   nx: 256
-  nt: 128
+  nt: 64
   sub: 1
   sub_t: 1
   shuffle: False
