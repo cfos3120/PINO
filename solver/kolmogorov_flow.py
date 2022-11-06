@@ -189,7 +189,8 @@ if __name__ == '__main__':
             t1 = default_timer()
             NS.advance(dt, delta_t=1e-3)
             #sol[i, j + 1, :, :] = NS.vorticity().squeeze(0).cpu().numpy()[::sub, ::sub]
-            sol[i, j + 1, :, :, 0], sol[i, j + 1, :, :, 1] = NS.velocity_field().squeeze(0).cpu().numpy()[::sub, ::sub]
+            print(NS.velocity_field().shape)
+            sol[i, j + 1, :, :, 0], sol[i, j + 1, :, :, 1] = NS.velocity_field().cpu().numpy()[::sub, ::sub]
             t2 = default_timer()
         print(i, t2 - t1)
         sol_ini = sol[i, -1, :, :]
