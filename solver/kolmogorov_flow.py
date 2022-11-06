@@ -181,16 +181,23 @@ if __name__ == '__main__':
     NS.advance(T_in, delta_t=1e-3)
 
     sol = np.zeros((T, t + 1, s // sub, s // sub, 2))
-    sol_ini = NS.vorticity().squeeze(0).cpu().numpy()[::sub, ::sub]
+    #sol_ini = NS.vorticity().squeeze(0).cpu().numpy()[::sub, ::sub]
+    
+    sol_ini_x, sol_ini_y = NS.velocity_field()
+    sol_ini_x = sol_ini_x.squeeze(0).cpu().numpy()[::sub, ::sub]
+    sol_ini_y = sol_ini_y.squeeze(0).cpu().numpy()[::sub, ::sub]
 
     for i in range(T):
-        sol[i, 0, :, :, 0], sol[i, 0, :, :, 1] = NS.velocity_field().squeeze(0).cpu().numpy()[::sub, ::sub]
+        #sol[i, 0, :, :, 0], sol[i, 0, :, :, 1] = NS.vorticity().squeeze(0).cpu().numpy()[::sub, ::sub]
+        sol[i, 0, :, :, 0], sol[i, 0, :, :, 1] = sol_ini_x, sol_ini_y
         for j in range(t):
             t1 = default_timer()
             NS.advance(dt, delta_t=1e-3)
             #sol[i, j + 1, :, :] = NS.vorticity().squeeze(0).cpu().numpy()[::sub, ::sub]
-            print(NS.velocity_field().shape)
-            sol[i, j + 1, :, :, 0], sol[i, j + 1, :, :, 1] = NS.velocity_field().cpu().numpy()[::sub, ::sub]
+            sol_x, sol_y = NS.velocity_field()
+            sol_x = sol_x.squeeze(0).cpu().numpy()[::sub, ::sub]
+            sol_y = sol_y.squeeze(0).cpu().numpy()[::sub, ::sub]
+            sol[i, j + 1, :, :, 0], sol[i, j + 1, :, :, 1] = sol_x, sol_y
             t2 = default_timer()
         print(i, t2 - t1)
         sol_ini = sol[i, -1, :, :]
