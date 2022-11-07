@@ -1,10 +1,10 @@
 #!/bin/bash
 #PBS -P MLFluids
-#PBS -l select=1:ncpus=9:ngpus=0:mem=100GB
+#PBS -l select=1:ncpus=9:ngpus=1:mem=100GB
 #PBS -l walltime=15:00:00
 #PBS -j oe
 
 module load python/3.8.2 cuda/10.2.89 magma/2.5.3
 source /project/MLFluids/pytorch_1.11/bin/activate
 
-python3 /home/cfos3120/PINO/solver/kolmogorov_flow.py --re 500
+CUDA_VISIBLE_DEVICES=0 python3 /home/cfos3120/PINO/solver/kolmogorov_flow.py --re 500

@@ -7,12 +7,6 @@ from .losses import LpLoss, PINO_loss3d, get_forcing
 from .distributed import reduce_loss_dict
 from .data_utils import sample_data
 
-try:
-    import wandb
-except ImportError:
-    wandb = None
-
-
 def train(model,
           loader, train_loader,
           optimizer, scheduler,
@@ -24,13 +18,6 @@ def train(model,
           tags=['Nan'],
           use_tqdm=True,
           profile=False):
-    if rank == 0 and wandb and log:
-        run = wandb.init(project=project,
-                         entity='hzzheng-pino',
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -45,10 +32,10 @@ def train(model,
 
     model.train()
     myloss = LpLoss(size_average=True)
-    pbar = range(config['train']['epochs'])
-    if use_tqdm:
-        pbar = tqdm(pbar, dynamic_ncols=True, smoothing=0.05)
     zero = torch.zeros(1).to(rank)
+    
+    pbar = range(config['train']['epochs'])
+    if use_tqdm: pbar = tqdm(pbar, dynamic_ncols=True, smoothing=0.05)
 
     for ep in pbar:
         loss_dict = {'train_loss': 0.0,
@@ -59,20 +46,21 @@ def train(model,
         if rank == 0 and profile:
                 torch.cuda.synchronize()
                 t1 = default_timer()
+        
         # start solving
         for x, y in train_loader:
             x, y = x.to(rank), y.to(rank)
 
             optimizer.zero_grad()
             x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
-            out = model(x_in).reshape(batch_size, S, S, T + 5)
-            out = out[..., :-5]
-            x = x[:, :, :, 0, -1]
+            out = model(x_in).reshape(batch_size, S, S, T + 5, 2)
+            out = out[..., :-5, 2]
+            x = x[:, :, :, 0, -2]
 
-            loss_l2 = myloss(out.view(batch_size, S, S, T), y.view(batch_size, S, S, T))
+            loss_l2 = myloss(out.view(batch_size, S, S, T, 2), y.view(batch_size, S, S, T, 2))
 
             if ic_weight != 0 or f_weight != 0:
-                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S, S, T), x, forcing, v, t_interval)
+                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S, S, T, 2), x, forcing, v, t_interval)
             else:
                 loss_ic, loss_f = zero, zero
 
@@ -103,25 +91,14 @@ def train(model,
                         f'Train loss: {train_loss:.5f}; Test l2 error: {test_l2:.5f}'
                     )
                 )
-            if wandb and log:
-                wandb.log(
-                    {
-                        'Train f error': train_f,
-                        'Train L2 error': train_ic,
-                        'Train loss': train_loss,
-                        'Test L2 error': test_l2,
-                        'Time cost': t2 - t1
-                    }
-                )
 
     if rank == 0:
         save_checkpoint(config['train']['save_dir'],
                         config['train']['save_name'],
                         model, optimizer)
-        if wandb and log:
-            run.finish()
 
-
+#____________________________________________________________
+# Not Optimised for U, V yet
 def mixed_train(model,              # model of neural operator
                 train_loader,       # dataloader for training with data
                 S1, T1,             # spacial and time dimension for training with data
@@ -136,13 +113,6 @@ def mixed_train(model,              # model of neural operator
                 group='FDM',        # group name
                 tags=['Nan'],       # tags
                 use_tqdm=True):     # turn on tqdm
-    if wandb and log:
-        run = wandb.init(project=project,
-                         entity='hzzheng-pino',
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -236,24 +206,10 @@ def mixed_train(model,              # model of neural operator
                     f'Eqn loss: {err_eqn:.5f}'
                 )
             )
-        if wandb and log:
-            wandb.log(
-                {
-                    'Data f error': train_f,
-                    'Data IC L2 error': train_ic,
-                    'Data train loss': train_loss,
-                    'Data L2 error': test_l2,
-                    'Random IC Train equation loss': err_eqn,
-                    'Time cost': t2 - t1
-                }
-            )
 
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
-    if wandb and log:
-        run.finish()
-
 
 def progressive_train(model,
                       loader, train_loader,
@@ -265,13 +221,6 @@ def progressive_train(model,
                       group='FDM',
                       tags=['Nan'],
                       use_tqdm=True):
-    if wandb and log:
-        run = wandb.init(project=project,
-                         entity='hzzheng-pino',
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -342,21 +291,9 @@ def progressive_train(model,
                         f'Train loss: {train_loss:.5f}; Test l2 error: {test_l2:.5f}'
                     )
                 )
-            if wandb and log:
-                wandb.log(
-                    {
-                        'Train f error': train_f,
-                        'Train L2 error': train_ic,
-                        'Train loss': train_loss,
-                        'Test L2 error': test_l2,
-                        'Time cost': t2 - t1
-                    }
-                )
 
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
-    if wandb and log:
-        run.finish()
 
 

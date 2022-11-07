@@ -18,6 +18,7 @@ from models import FNN3d, FNN2d
 
 
 def subprocess_fn(rank, args):
+    
     if args.distributed:
         setup(rank, args.num_gpus)
     print(f'Running on rank {rank}')
@@ -28,22 +29,14 @@ def subprocess_fn(rank, args):
 
     # construct dataloader
     data_config = config['data']
-    if 'datapath2' in data_config:
-        loader = NSLoader(datapath1=data_config['datapath'], datapath2=data_config['datapath2'],
-                          nx=data_config['nx'], nt=data_config['nt'],
-                          sub=data_config['sub'], sub_t=data_config['sub_t'],
-                          N=data_config['total_num'],
-                          t_interval=data_config['time_interval'])
-    else:
-        loader = NSLoader(datapath1=data_config['datapath'],
-                          nx=data_config['nx'], nt=data_config['nt'],
-                          sub=data_config['sub'], sub_t=data_config['sub_t'],
-                          N=data_config['total_num'],
-                          t_interval=data_config['time_interval'])
-    if args.start != -1:
-        config['data']['offset'] = args.start
-    trainset = loader.make_dataset(data_config['n_sample'],
-                               start=data_config['offset'])
+    loader = NSLoader(datapath1=data_config['datapath'],
+                        nx=data_config['nx'], nt=data_config['nt'],
+                        sub=data_config['sub'], sub_t=data_config['sub_t'],
+                        N=data_config['total_num'],
+                        t_interval=data_config['time_interval'])
+
+    trainset = loader.make_dataset(data_config['n_sample'])
+
     train_loader = DataLoader(trainset, batch_size=config['train']['batchsize'],
                               sampler=data_sampler(trainset,
                                                    shuffle=data_config['shuffle'],
@@ -66,19 +59,7 @@ def subprocess_fn(rank, args):
     if args.distributed:
         model = DDP(model, device_ids=[rank], broadcast_buffers=False)
 
-    if 'twolayer' in config['train'] and config['train']['twolayer']:
-        requires_grad(model, False)
-        requires_grad(model.sp_convs[-1], True)
-        requires_grad(model.ws[-1], True)
-        requires_grad(model.fc1, True)
-        requires_grad(model.fc2, True)
-        params = []
-        for param in model.parameters():
-            if param.requires_grad == True:
-                params.append(param)
-    else:
-        params = model.parameters()
-
+    params = model.parameters()
     optimizer = Adam(params, betas=(0.9, 0.999),
                      lr=config['train']['base_lr'])
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
