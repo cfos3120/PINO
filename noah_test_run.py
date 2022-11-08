@@ -60,5 +60,5 @@ if __name__ == '__main__':
     sol_cartesian = torch.tensor(sol_cartesian).permute(0,3,1,2,4)
     print('Output Shape: ', sol_cartesian.shape)
     sol_cartesian = sol_cartesian.numpy()
-    np.save('NS_fft_Re500_T4000_cartesian.npy')
+    np.save('NS_fft_Re500_T4000_cartesian.npy', sol_cartesian)
     print('Conversion Complete')
