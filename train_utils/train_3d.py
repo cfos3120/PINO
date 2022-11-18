@@ -3,7 +3,7 @@ from tqdm import tqdm
 from timeit import default_timer
 import torch.nn.functional as F
 from .utils import save_checkpoint
-from .losses import LpLoss, PINO_loss3d, get_forcing
+from .losses import LpLoss, PINO_loss3d, get_forcing, get_forcing_cartesian
 from .distributed import reduce_loss_dict
 from .data_utils import sample_data
 
@@ -117,8 +117,8 @@ def mixed_train(model,              # model of neural operator
     # data parameters
     v = 1 / config['data']['Re']
     t_interval = config['data']['time_interval']
-    forcing_1 = get_forcing(S1).to(device)
-    forcing_2 = get_forcing(S2).to(device)
+    forcing_1 = get_forcing_cartesian(S1).to(device) #get_forcing(S1).to(device)
+    forcing_2 = get_forcing_cartesian(S2).to(device) #get_forcing(S2).to(device)
     # training settings
     batch_size = config['train']['batchsize']
     ic_weight = config['train']['ic_loss']
@@ -147,16 +147,15 @@ def mixed_train(model,              # model of neural operator
             x, y = next(train_loader)
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
-            x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
-            out = model(x_in).reshape(batch_size, S1, S1, T1 + 5)
-            out = out[..., :-5]
-            x = x[:, :, :, 0, -1]
-
-            loss_l2 = myloss(out.view(batch_size, S1, S1, T1),
-                             y.view(batch_size, S1, S1, T1))
+            #x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
+            out = model(x).reshape(batch_size, S1, S1, T1, 2) #model(x_in).reshape(batch_size, S1, S1, T1 + 5, 2)
+            #out = out[:, :, :, :-5, :]
+            
+            loss_l2 = myloss(out.view(batch_size, S1, S1, T1, 2),
+                             y.view(batch_size, S1, S1, T1, 2))
 
             if ic_weight != 0 or f_weight != 0:
-                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1),
+                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1, 2), #<- This is where you are up to
                                               x, forcing_1,
                                               v, t_interval)
             else:
@@ -176,7 +175,7 @@ def mixed_train(model,              # model of neural operator
             train_f /= num_data_iter
             train_loss /= num_data_iter
             test_l2 /= num_data_iter
-        # train with random ICs
+        # train with random ICs #NOTE: THIS HAS NOT BEEN CONVERTED TO CARTESIAN YET
         for _ in range(num_eqn_iter):
             new_a = next(a_loader)
             new_a = new_a.to(device)

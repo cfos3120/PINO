@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from solver.random_fields import GaussianRF
 from train_utils import Adam
-from train_utils.datasets import NSLoader, online_loader, DarcyFlow
+from train_utils.datasets import NSLoader, online_loader#, DarcyFlow
 from train_utils.train_3d import mixed_train
 from train_utils.train_2d import train_2d_operator
 from models import FNN3d, FNN2d
@@ -47,7 +47,9 @@ def train_3d(args, config):
                   modes2=config['model']['modes2'],
                   modes3=config['model']['modes3'],
                   fc_dim=config['model']['fc_dim'],
-                  layers=config['model']['layers']).to(device)
+                  layers=config['model']['layers'],
+                  in_dim=5,
+                  out_dim=2).to(device)
     # Load from checkpoint
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']

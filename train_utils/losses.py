@@ -104,6 +104,42 @@ def FDM_NS_vorticity(w, v=1/40, t_interval=1.0):
     Du1 = wt + (ux*wx + uy*wy - v*wlap)[...,1:-1] #- forcing
     return Du1
 
+#___________________________________________________________________________________________________
+# Created By Noah Here
+def FDM_NS_cartesian(u, u_0, nu=1/40, t_interval=1.0):
+    batchsize = u.size(0)
+    nx = u.size(1)
+    ny = u.size(2)
+    nt = u.size(3)
+    device = u.device
+
+    grid = u_0[...,:-2] #<- may need this for autograd if we get it working
+    
+    u = u.reshape(batchsize, nx, ny, nt, 2)
+
+    # Assuming uniform periodic spatial grid NOTE: These need to line up with the grid function made for training.
+    x = torch.arange(0,2*np.pi,2*np.pi/nx)
+    y = torch.arange(0,2*np.pi,2*np.pi/ny)
+    t = torch.arange(0,nt*t_interval,t_interval)
+
+    # each of these (dV_dx etc.) should come with shape (Batch,x,y,t,Velocity direction)
+    dV_dx, dV_dy, dV_dt = torch.gradient(u, spacing =tuple([x, y, t]), dim = [1,2,3])
+    dV_dxx = torch.gradient(dV_dx, spacing = tuple([x]), dim = 1)[0]
+    dV_dyy = torch.gradient(dV_dy, spacing = tuple([y]), dim = 2)[0]
+
+    loss_eq1 = dV_dx[...,0] + dV_dy[...,1]
+    loss_eq2 = nu * (dV_dxx[...,0] + dV_dyy[...,0]) - dV_dt[...,0] - u[...,0]*dV_dx[...,0] - u[...,1]*dV_dy[...,0]
+    loss_eq3 = nu * (dV_dxx[...,1] + dV_dyy[...,1]) - dV_dt[...,1] - u[...,0]*dV_dx[...,1] - u[...,1]*dV_dy[...,1]
+
+    return loss_eq1, loss_eq2, loss_eq3
+
+def get_forcing_cartesian(S):
+    x2 = torch.tensor(np.linspace(0, 2*np.pi, S+1)[:-1], dtype=torch.float).reshape(1, S).repeat(S, 1)
+    # Assume Forcing Function is pressure term. Pressure term is non-zero if there is a change in forcing via x or y e.g dP/dx
+    # Since the forcing function varies in both directions equally we can assume dP/dx = dP/dy. Therefore, still use this term as 
+    # forcing and just apply to the U and V navierstokes equations without and further transformations.
+    return -4 * (torch.cos(4*(x2))).reshape(1,S,S,1)
+#___________________________________________________________________________________________________
 
 def Autograd_Burgers(u, grid, v=1/100):
     from torch.autograd import grad
@@ -182,7 +218,7 @@ class LpLoss(object):
 
     def rel(self, x, y):
         num_examples = x.size()[0]
-
+    
         diff_norms = torch.norm(x.reshape(num_examples,-1) - y.reshape(num_examples,-1), self.p, 1)
         y_norms = torch.norm(y.reshape(num_examples,-1), self.p, 1)
 
@@ -250,16 +286,25 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
     ny = u.size(2)
     nt = u.size(3)
 
-    u = u.reshape(batchsize, nx, ny, nt)
+    u = u.reshape(batchsize, nx, ny, nt, 2)
     lploss = LpLoss(size_average=True)
 
-    u_in = u[:, :, :, 0]
-    loss_ic = lploss(u_in, u0)
+    u_in = u[:, :, :, 0, :]
 
-    Du = FDM_NS_vorticity(u, v, t_interval)
-    f = forcing.repeat(batchsize, 1, 1, nt-2)
-    loss_f = lploss(Du, f)
+    loss_ic = lploss(u_in, u0[:, :, :, 0, -2:])
 
+    #Du = FDM_NS_vorticity(u, v, t_interval)
+    #f = forcing.repeat(batchsize, 1, 1, nt-2)
+    loss_eq1, loss_eq2, loss_eq3 = FDM_NS_cartesian(u, u0, v, t_interval)
+    f = forcing.repeat(batchsize, 1, 1, nt, 1)
+    loss1 = lploss(loss_eq1, f)
+    loss2 = lploss(loss_eq2, f)
+
+    # Note lploss does not work comparing against zeros (it is the divisor) 
+    # so we add 1 to the equation and compare to a ones matrix
+    loss3 = lploss(loss_eq3+1, torch.ones_like(loss_eq3)) 
+    loss_f = loss1 + loss2 + loss3
+    
     return loss_ic, loss_f
 
 
@@ -290,3 +335,4 @@ def get_forcing(S):
     x1 = torch.tensor(np.linspace(0, 2*np.pi, S+1)[:-1], dtype=torch.float).reshape(S, 1).repeat(1, S)
     x2 = torch.tensor(np.linspace(0, 2*np.pi, S+1)[:-1], dtype=torch.float).reshape(1, S).repeat(S, 1)
     return -4 * (torch.cos(4*(x2))).reshape(1,S,S,1)
+
