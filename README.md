@@ -1,4 +1,17 @@
-# PINO
+# Ammendments
+
+To convert to Cartesian equations of the Navier Stokes a few adjustments were made:
+- Converted the dataset from vorticity based to U and V velocities (x and y direction respectively) using `noah_test_run.py`. The resultant dataframe has a new dimension and has a size conversion of $[4000, 65, 64, 64]$ to $[4000, 65, 64, 64, 2]$ where the new dimension represents the velocity channel.
+- Changes were made to `train_operator` specifically to create a FNO model with input channels 5 (instead of default 4) and output channels 2 (instead of default 1).
+- Changes were not needed to be made to `fourier3d.py` (might need to verify this). As it was already built to handle multichannel inputs and outputs.
+- Lots of changes were made to the function `mixed_train` in `train_3d.py` to handle the extra dimensionality. (Note: the other training methods are not yet compatible).
+- No changes were made to the generation of random fields for the unsupervised training, so this functionality does not apply yet.
+- Changes were made to the loss function `PINO_loss3d` in `losses.py` to include two new functions `FDM_NS_cartesian` and `get_forcing_cartesian` (the latter has no difference from `get forcing`).
+- `FDM_NS_cartesian` used the `torch.gradient` function (equivocal to `numpy.gradient` but handles batches and dimensions better). This function is not a neural network autograd function. Instead, it uses a finite difference method with edge order of accuracy = 1 (this can only be increased to 2 natively).
+- `lploss` function was still utilized and the forcing function remained constant as it was symmetrical in the x-y directions. 
+- Additionally before model input the padding was removed but may need to be included again.
+
+# PINO (original)
 
 ![PINO Diagram](docs/pino-diagram4.png)
 
