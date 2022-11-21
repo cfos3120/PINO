@@ -63,13 +63,8 @@ if __name__ == '__main__':
     # np.save('NS_fft_Re500_T4000_cartesian.npy', sol_cartesian)
     # print('Conversion Complete')
 
-    try: data = np.load(r"C:\Users\Noahc\Documents\USYD\PHD\8 - Github\PINO datasets\NS_fft_Re500_T4000.npy" ) 
-    except: 
-        try: data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy')
-        except: raise('No Dataset File Found')
-    else: print('Dataset Allocated')
-
-    try: print(data.shape)
-    except: print('could not print data.shape')
+    data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy')
+    print('Dataset Allocated')
+    
     data1 = torch.tensor(data, dtype=torch.float)
-    print(data.shape)
+    print(data1.shape)
