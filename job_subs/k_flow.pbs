@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -P MLFluids
-#PBS -l select=1:ncpus=9:ngpus=0:mem=200GB
+#PBS -l select=1:ncpus=9:ngpus=0:mem=120GB
 #PBS -l walltime=15:00:00
 #PBS -j oe
 
