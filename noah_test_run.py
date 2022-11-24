@@ -63,7 +63,7 @@ if __name__ == '__main__':
     # np.save('NS_fft_Re500_T4000_cartesian_part1.npy', sol_cartesian)
     # print('Conversion Complete')
 
-    data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian_part1.npy')
+    data = np.load(r'NS_fft_Re500_T4000_cartesian_part1.npy')
     print('Dataset allocated and Numpy Loading Works')
 
     # data1 = torch.tensor(data, dtype=torch.float)
