@@ -1,6 +1,6 @@
 data:
   #datapath: 'C:\Users\Noahc\Documents\USYD\PHD\0 - Work Space\analytics_v1_PINO\NS_fft_Re500_T4000_cartesian_trial.npy'
-  datapath: '/rds/PRJ-MLFluids/NS_fft_Re500_T4000_cartesian_trial.npy'
+  datapath: '/project/MLFluids/NS_fft_Re500_T4000_cartesian_trial.npy'
   Re: 500
   total_num: 2
   offset: 0
