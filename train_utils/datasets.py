@@ -48,6 +48,7 @@ class NSLoader(object):
         self.time_scale = t_interval
         data1 = np.load(datapath1)
         data1 = torch.tensor(data1, dtype=torch.float)[..., ::sub_t, ::sub, ::sub, ::]
+        print('Data Input Shape: ',data1.shape)
 
         if t_interval == 0.5:
             data1 = self.extract(data1)

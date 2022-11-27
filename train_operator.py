@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import math
 import torch
 from torch.utils.data import DataLoader
-
+print('Pytorch version: ',torch.__version__)
 from solver.random_fields import GaussianRF
 from train_utils import Adam
 from train_utils.datasets import NSLoader, online_loader#, DarcyFlow
