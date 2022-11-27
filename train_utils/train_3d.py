@@ -155,6 +155,7 @@ def mixed_train(model,              # model of neural operator
                              y.view(batch_size, S1, S1, T1, 2))
 
             if ic_weight != 0 or f_weight != 0:
+                print(out.view(batch_size, S1, S1, T1, 2).shape)
                 loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1, 2), #<- This is where you are up to
                                               x, forcing_1,
                                               v, t_interval)
