@@ -118,9 +118,9 @@ def FDM_NS_cartesian(u, u_0, nu=1/40, t_interval=1.0):
     u = u.reshape(batchsize, nx, ny, nt, 2)
 
     # Assuming uniform periodic spatial grid NOTE: These need to line up with the grid function made for training.
-    x = torch.arange(0,2*np.pi,2*np.pi/nx)
-    y = torch.arange(0,2*np.pi,2*np.pi/ny)
-    t = torch.arange(0,nt*t_interval,t_interval)
+    x = torch.arange(0,2*np.pi,2*np.pi/nx, device=device)
+    y = torch.arange(0,2*np.pi,2*np.pi/ny, device=device)
+    t = torch.arange(0,nt*t_interval,t_interval, device=device)
 
     # each of these (dV_dx etc.) should come with shape (Batch,x,y,t,Velocity direction)
     dV_dx, dV_dy, dV_dt = torch.gradient(u, spacing =tuple([x, y, t]), dim = [1,2,3])
