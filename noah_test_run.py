@@ -49,7 +49,8 @@ def vor2vel(w, L=2 * np.pi):
 if __name__ == '__main__':
     try: data = np.load(r"C:\Users\Noahc\Documents\USYD\PHD\8 - Github\PINO datasets\NS_fft_Re500_T4000.npy" )
     except: 
-        try: data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000.npy')#[:2000, ...] 
+        #try: data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000.npy')#[:2000, ...] 
+        try: data = np.load(r'/project/MLFluids/NS_Re500_s256_T100_test.npy')
         except: raise('No Dataset File Found')
     else: print('Dataset Allocated')
     
@@ -60,10 +61,11 @@ if __name__ == '__main__':
     sol_cartesian = torch.tensor(sol_cartesian).permute(0,3,1,2,4)
     print('Output Shape: ', sol_cartesian.shape)
     sol_cartesian = sol_cartesian.numpy()
-    np.save(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy', sol_cartesian)
+    np.save(r'/project/MLFluids/NS_Re500_s256_T100_test_cartesian.npy', sol_cartesian)
     print('Conversion Complete')
 
-    data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy')
+    #data = np.load(r'/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy')
+    data = np.load(r'/project/MLFluids/NS_Re500_s256_T100_test.npy')
     print('Dataset allocated and Numpy Loading Works')
 
     # data1 = torch.tensor(data, dtype=torch.float)
