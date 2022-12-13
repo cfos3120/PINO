@@ -57,6 +57,7 @@ def train_3d(args, config):
         ckpt = torch.load(ckpt_path)
         model.load_state_dict(ckpt['model'])
         print('Weights loaded from %s' % ckpt_path)
+        
     # create optimizer and learning rate scheduler
     optimizer = Adam(model.parameters(), betas=(0.9, 0.999),
                      lr=config['train']['base_lr'])

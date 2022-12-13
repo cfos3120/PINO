@@ -158,7 +158,7 @@ def mixed_train(model,              # model of neural operator
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
-            out = model(x).reshape(batch_size, S1, S1, T1 + 5, 2)
+            out = model(x_in).reshape(batch_size, S1, S1, T1 + 5, 2)
             out = out[:, :, :, :-5, :]
             
             loss_l2 = myloss(out.view(batch_size, S1, S1, T1, 2),
