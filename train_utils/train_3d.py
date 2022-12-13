@@ -278,9 +278,9 @@ def progressive_train(model,
                 x = x[:, ::milestone, ::milestone, :, :]
                 y = y[:, ::milestone, ::milestone, :]
                 optimizer.zero_grad()
-                x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
-                out = model(x_in).reshape(batch_size, S, S, T + 5)
-                out = out[..., :-5]
+                #x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
+                out = model(x).reshape(batch_size, S, S, T)#.reshape(batch_size, S, S, T + 5)
+                #out = out[..., :-5]
                 x = x[:, :, :, 0, -1]
 
                 loss_l2 = myloss(out.view(batch_size, S, S, T), y.view(batch_size, S, S, T))
