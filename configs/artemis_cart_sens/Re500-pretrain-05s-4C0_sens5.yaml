@@ -1,5 +1,5 @@
 data:
-  datapath: '/project/MLFluids/NS_fft_Re500_T4000.npy'
+  datapath: '/project/MLFluids/NS_fft_Re500_T4000_cartesian.npy'
   Re: 500
   total_num: 4000
   offset: 0
