@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 from timeit import default_timer
+import numpy as np
 import torch.nn.functional as F
 from .utils import save_checkpoint
 from .losses import LpLoss, PINO_loss3d, get_forcing, get_forcing_cartesian
@@ -126,6 +127,15 @@ def mixed_train(model,              # model of neural operator
     xy_weight = config['train']['xy_loss']
     num_data_iter = config['train']['data_iter']
     num_eqn_iter = config['train']['eqn_iter']
+    # add extra lp_loss_factor for sensitivity test
+    lp_loss_factor = config['train']['pde_loss_factor']
+        
+    # intitialise training lsit savers
+    train_ic_list = list()
+    test_l2_list = list()
+    train_loss_list = list()
+    train_f_list = list()
+    epoch_timer_list = list()
 
     model.train()
     myloss = LpLoss(size_average=True)
@@ -147,9 +157,9 @@ def mixed_train(model,              # model of neural operator
             x, y = next(train_loader)
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
-            #x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
-            out = model(x).reshape(batch_size, S1, S1, T1, 2) #model(x_in).reshape(batch_size, S1, S1, T1 + 5, 2)
-            #out = out[:, :, :, :-5, :]
+            x_in = F.pad(x, (0, 0, 0, 5), "constant", 0)
+            out = model(x).reshape(batch_size, S1, S1, T1 + 5, 2)
+            out = out[:, :, :, :-5, :]
             
             loss_l2 = myloss(out.view(batch_size, S1, S1, T1, 2),
                              y.view(batch_size, S1, S1, T1, 2))
@@ -157,7 +167,7 @@ def mixed_train(model,              # model of neural operator
             if ic_weight != 0 or f_weight != 0:
                 loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1, 2), #<- This is where you are up to
                                               x, forcing_1,
-                                              v, t_interval)
+                                              v, t_interval, lp_loss_factor)
             else:
                 loss_ic, loss_f = zero, zero
 
@@ -175,6 +185,7 @@ def mixed_train(model,              # model of neural operator
             train_f /= num_data_iter
             train_loss /= num_data_iter
             test_l2 /= num_data_iter
+
         # train with random ICs #NOTE: THIS HAS NOT BEEN CONVERTED TO CARTESIAN YET
         for _ in range(num_eqn_iter):
             new_a = next(a_loader)
@@ -195,6 +206,14 @@ def mixed_train(model,              # model of neural operator
 
         scheduler.step()
         t2 = default_timer()
+
+        # print losses to file
+        train_ic_list.append(train_ic)
+        test_l2_list.append(test_l2)
+        train_loss_list.append(train_loss)
+        train_f_list.append(train_f)
+        epoch_timer_list.append(t2-t1)
+
         if num_eqn_iter != 0:
             err_eqn /= num_eqn_iter
         if use_tqdm:
@@ -209,6 +228,10 @@ def mixed_train(model,              # model of neural operator
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
+
+    # save losses to file
+    np.save('checkpoints/' + config['train']['save_name'] + '/losses_' + config['train']['save_name'], 
+            [train_ic_list,test_l2_list,train_loss_list,train_f_list,epoch_timer_list])
 
 def progressive_train(model,
                       loader, train_loader,
@@ -232,6 +255,7 @@ def progressive_train(model,
     f_weight = config['train']['f_loss']
     xy_weight = config['train']['xy_loss']
 
+    # train model
     model.train()
     myloss = LpLoss(size_average=True)
     zero = torch.zeros(1).to(device)
@@ -283,6 +307,7 @@ def progressive_train(model,
             train_loss /= len(train_loader)
             test_l2 /= len(train_loader)
             t2 = default_timer()
+
             if use_tqdm:
                 pbar.set_description(
                     (

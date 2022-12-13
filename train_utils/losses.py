@@ -280,7 +280,7 @@ def PINO_loss(u, u0):
     return loss_u, loss_f
 
 
-def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
+def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0, pde_loss_factor = 1):
     batchsize = u.size(0)
     nx = u.size(1)
     ny = u.size(2)
@@ -297,12 +297,19 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
     #f = forcing.repeat(batchsize, 1, 1, nt-2)
     loss_eq1, loss_eq2, loss_eq3 = FDM_NS_cartesian(u, u0, v, t_interval)
     f = forcing.repeat(batchsize, 1, 1, nt, 1)
-    loss1 = lploss(loss_eq1, f)
-    loss2 = lploss(loss_eq2, f)
+    
+    if pde_loss_factor == 'mse':
+        loss1 = F.mse_loss(loss_eq1, f)
+        loss2 = F.mse_loss(loss_eq2, f)
+        loss3 = F.mse_loss(loss_eq3, torch.zeros_like(loss_eq3)) 
+    else:
+        loss1 = lploss(loss_eq1, f)
+        loss2 = lploss(loss_eq2, f)
 
-    # Note lploss does not work comparing against zeros (it is the divisor) 
-    # so we add 1 to the equation and compare to a ones matrix
-    loss3 = lploss(loss_eq3+1, torch.ones_like(loss_eq3)) 
+        # Note lploss does not work comparing against zeros (it is the divisor) 
+        # so we add 1 to the equation and compare to a ones matrix
+        loss3 = lploss(loss_eq3+pde_loss_factor, torch.ones_like(loss_eq3)*pde_loss_factor) 
+    
     loss_f = loss1 + loss2 + loss3
     
     return loss_ic, loss_f

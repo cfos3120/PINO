@@ -34,6 +34,7 @@ def train_3d(args, config):
                                       batch_size=config['train']['batchsize'],
                                       start=data_config['offset'],
                                       train=data_config['shuffle'])
+    
     # prepare dataloader for training with only equations
     gr_sampler = GaussianRF(2, data_config['S2'], 2 * math.pi, alpha=2.5, tau=7, device=device)
     a_loader = online_loader(gr_sampler,

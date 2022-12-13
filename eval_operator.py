@@ -11,6 +11,7 @@ from train_utils.eval_2d import eval_darcy
 from argparse import ArgumentParser
 
 
+
 def test_3d(config):
     device = 0 if torch.cuda.is_available() else 'cpu'
     data_config = config['data']
@@ -80,5 +81,4 @@ if __name__ == '__main__':
         test_2d(config)
     else:
         test_3d(config)
-
 
