@@ -230,7 +230,7 @@ def mixed_train(model,              # model of neural operator
                     model, optimizer)
 
     # save losses to file
-    np.save('checkpoints/' + config['train']['save_name'] + '/losses_' + config['train']['save_name'], 
+    np.save('/checkpoints/' + config['train']['save_dir'] + '/losses_' + config['train']['save_name'][:3], 
             [train_ic_list,test_l2_list,train_loss_list,train_f_list,epoch_timer_list])
 
 def progressive_train(model,
