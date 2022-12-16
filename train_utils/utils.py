@@ -153,7 +153,7 @@ def count_params(net):
     return count
 
 
-def save_checkpoint(path, name, model, optimizer=None):
+def save_checkpoint(path, name, model, optimizer=None, losses=None):
     ckpt_dir = 'checkpoints/%s/' % path
     if not os.path.exists(ckpt_dir):
         os.makedirs(ckpt_dir)
@@ -173,4 +173,6 @@ def save_checkpoint(path, name, model, optimizer=None):
     }, ckpt_dir + name)
     print('Checkpoint is saved at %s' % ckpt_dir + name)
 
+    np.save(ckpt_dir + name[-3] + '_losses', losses)
+    print('Losses saved at %s' % ckpt_dir + name[-3] + '_losses', losses)
 

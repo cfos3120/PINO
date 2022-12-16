@@ -225,13 +225,10 @@ def mixed_train(model,              # model of neural operator
                 )
             )
 
+    losses_total = [train_ic_list,test_l2_list,train_loss_list,train_f_list,epoch_timer_list]
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
-                    model, optimizer)
-
-    # save losses to file
-    np.save(r'checkpoints/' + config['train']['save_dir'] + r'/losses_' + config['train']['save_name'][:-3], 
-            [train_ic_list,test_l2_list,train_loss_list,train_f_list,epoch_timer_list])
+                    model, optimizer, losses_total)
 
 def progressive_train(model,
                       loader, train_loader,
