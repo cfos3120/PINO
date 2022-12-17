@@ -173,6 +173,6 @@ def save_checkpoint(path, name, model, optimizer=None, losses=None):
     }, ckpt_dir + name)
     print('Checkpoint is saved at %s' % ckpt_dir + name)
 
-    np.save(ckpt_dir + name[-3] + '_losses', losses)
-    print('Losses saved at %s' % ckpt_dir + name[-3] + '_losses', losses)
+    np.save(ckpt_dir + name[:-3] + '_losses', losses)
+    print('Losses saved at %s' % ckpt_dir + name[-3] + '_losses')
 
