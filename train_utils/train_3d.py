@@ -129,7 +129,8 @@ def mixed_train(model,              # model of neural operator
     num_eqn_iter = config['train']['eqn_iter']
     # add extra lp_loss_factor for sensitivity test
     lp_loss_factor = config['train']['pde_loss_factor']
-        
+    print('Loss Factor Used: ', lp_loss_factor)
+
     # intitialise training lsit savers
     train_ic_list = list()
     test_l2_list = list()
