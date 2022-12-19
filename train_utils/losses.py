@@ -296,7 +296,7 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0, pde_loss_factor = 1):
     #Du = FDM_NS_vorticity(u, v, t_interval)
     #f = forcing.repeat(batchsize, 1, 1, nt-2)
     loss_eq1, loss_eq2, loss_eq3 = FDM_NS_cartesian(u, u0, v, t_interval)
-    f = forcing.repeat(batchsize, 1, 1, nt, 1)
+    f = forcing.reshape([1,nx,nx,1]).repeat(batchsize, 1, 1, nt, 1)
     
     if pde_loss_factor == 'mse':
         print(loss_eq1.shape, f.shape)
