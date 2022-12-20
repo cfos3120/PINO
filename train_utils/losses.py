@@ -299,7 +299,6 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0, pde_loss_factor = 1):
     f = forcing.reshape([1,nx,nx,1]).repeat(batchsize, 1, 1, nt)
     
     if pde_loss_factor == 'mse':
-        print(loss_eq1.shape, f.shape)
         loss1 = F.mse_loss(loss_eq1, f)
         loss2 = F.mse_loss(loss_eq2, f)
         loss3 = F.mse_loss(loss_eq3, torch.zeros_like(loss_eq3)) 
