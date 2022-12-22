@@ -131,7 +131,7 @@ def FDM_NS_cartesian(u, u_0, nu=1/40, t_interval=1.0):
     loss_eq2 = nu * (dV_dxx[...,0] + dV_dyy[...,0]) - dV_dt[...,0] - u[...,0]*dV_dx[...,0] - u[...,1]*dV_dy[...,0]
     loss_eq3 = nu * (dV_dxx[...,1] + dV_dyy[...,1]) - dV_dt[...,1] - u[...,0]*dV_dx[...,1] - u[...,1]*dV_dy[...,1]
 
-    return loss_eq1, loss_eq2, loss_eq3
+    return loss_eq1, loss_eq2, loss_eq3, dV_dx[...,0], dV_dy[...,1]
 
 def get_forcing_cartesian(S):
     x2 = torch.tensor(np.linspace(0, 2*np.pi, S+1)[:-1], dtype=torch.float).reshape(1, S).repeat(S, 1)
@@ -295,19 +295,27 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0, pde_loss_factor = 1):
 
     #Du = FDM_NS_vorticity(u, v, t_interval)
     #f = forcing.repeat(batchsize, 1, 1, nt-2)
-    loss_eq1, loss_eq2, loss_eq3 = FDM_NS_cartesian(u, u0, v, t_interval)
+    loss_eq1, loss_eq2, loss_eq3, loss_eq1_1, loss_eq1_2 = FDM_NS_cartesian(u, u0, v, t_interval)
     f = forcing.reshape([1,nx,nx,1]).repeat(batchsize, 1, 1, nt)
     
     if pde_loss_factor == 'mse':
         loss1 = F.mse_loss(loss_eq1, f)
         loss2 = F.mse_loss(loss_eq2, f)
         loss3 = F.mse_loss(loss_eq3, torch.zeros_like(loss_eq3)) 
+    elif pde_loss_factor == 'combined':
+        loss1 = lploss(loss_eq2 + loss_eq1, f)
+        loss2 = lploss(loss_eq3 + loss_eq1, f)
+        loss3 = 0
+    elif pde_loss_factor == 'self_scaled':
+        loss1 = lploss(loss_eq1, f)
+        loss2 = lploss(loss_eq2, f)
+        loss3 = lploss(loss_eq1_1, -loss_eq1_2) 
     else:
         loss1 = lploss(loss_eq1, f)
         loss2 = lploss(loss_eq2, f)
 
         # Note lploss does not work comparing against zeros (it is the divisor) 
-        # so we add 1 to the equation and compare to a ones matrix
+        # so we add an offset to the equation and compare to a ones matrix
         loss3 = lploss(loss_eq3+pde_loss_factor, torch.ones_like(loss_eq3)*pde_loss_factor) 
     
     loss_f = loss1 + loss2 + loss3
