@@ -99,7 +99,7 @@ def train(model,
                         model, optimizer)
 
 #____________________________________________________________
-# Not Optimised for U, V yet
+# Not Optimised for U, V yet using random location points (only supervised)
 def mixed_train(model,              # model of neural operator
                 train_loader,       # dataloader for training with data
                 S1, T1,             # spacial and time dimension for training with data
@@ -166,7 +166,7 @@ def mixed_train(model,              # model of neural operator
                              y.view(batch_size, S1, S1, T1, 2))
 
             if ic_weight != 0 or f_weight != 0:
-                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1, 2), #<- This is where you are up to
+                loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S1, S1, T1, 2),
                                               x, forcing_1,
                                               v, t_interval, lp_loss_factor)
             else:
