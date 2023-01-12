@@ -25,18 +25,24 @@ def test_3d(config):
                                      batch_size=config['test']['batchsize'],
                                      start=data_config['offset'],
                                      train=data_config['shuffle'])
+    
+    # create model
     model = FNN3d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   modes3=config['model']['modes3'],
                   fc_dim=config['model']['fc_dim'],
-                  layers=config['model']['layers']).to(device)
+                  layers=config['model']['layers'],
+                  in_dim=5,
+                  out_dim=2).to(device)
 
+    # Load from checkpoint
     if 'ckpt' in config['test']:
         ckpt_path = config['test']['ckpt']
         ckpt = torch.load(ckpt_path)
         model.load_state_dict(ckpt['model'])
         print('Weights loaded from %s' % ckpt_path)
     print(f'Resolution : {loader.S}x{loader.S}x{loader.T}')
+    
     forcing = get_forcing(loader.S).to(device)
     eval_ns(model,
             loader,

@@ -30,7 +30,7 @@ def eval_ns(model,  # model
     batch_size = config['test']['batchsize']
     
     # add extra lp_loss_factor for sensitivity test
-    lp_loss_factor = config['train']['pde_loss_factor']
+    lp_loss_factor = config['test']['pde_loss_factor']
     print('Loss Factor Used: ', lp_loss_factor)
 
     # intitialise training lsit savers

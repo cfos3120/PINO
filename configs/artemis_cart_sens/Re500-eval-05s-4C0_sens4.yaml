@@ -20,8 +20,8 @@ model:
 
 test:
   batchsize: 1
-  ckpt: '/home/cfos3120/checkpoints/cartesian_testing/PINO-pretrain-Re500-05s-4C0_sens1.pt'
-  pde_loss_factor: 1
+  ckpt: '/home/cfos3120/checkpoints/cartesian_testing/PINO-pretrain-Re500-05s-4C0_sens4.pt'
+  pde_loss_factor: 0.0001
   
 others:
   project: 'PINO-None'
