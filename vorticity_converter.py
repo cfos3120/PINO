@@ -64,13 +64,13 @@ if __name__ == '__main__':
     artemis_path = "/project/MLFluids/"
     
     # Dataste type allocation 
-    if args['dataset'] == "train":
+    if args.dataset == "train":
         dataset_name = "NS_fft_Re500_T4000.npy"
-    elif args['dataset'] == "test1":
+    elif args.dataset == "test1":
         dataset_name = "NS_Re500_s256_T100_test.npy"
-    elif args['dataset'] == "test2":
+    elif args.dataset == "test2":
         dataset_name = "NS_fine_Re500_T64_R256_sub1.npy"
-    elif args['dataset'] == "tune":
+    elif args.dataset == "tune":
         dataset_name = " "
     else: raise Exception('Sorry, dataset type not eligible (e.g. "train", "test" or "tune")')
         
