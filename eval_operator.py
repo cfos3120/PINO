@@ -61,4 +61,3 @@ if __name__ == '__main__':
         config = yaml.load(stream, yaml.FullLoader)
 
     test_3d(config)
-
