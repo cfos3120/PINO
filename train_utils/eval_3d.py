@@ -71,14 +71,14 @@ def eval_ns(model,  # model
 
                     # print losses to file
             loss_ic_list.append(loss_ic)
-            loss_l2_list.append(test_l2)
+            loss_l2_list.append(loss_l2)
             loss_f_list.append(loss_f)
 
     end_time = default_timer()
-    test_l2 = loss_dict['test_l2'].item() / len(dataloader)
+    loss_l2 = loss_dict['test_l2'].item() / len(dataloader)
     loss_f = loss_dict['train_f'].item() / len(dataloader)
     loss_ic = loss_dict['loss_ic'].item() / len(dataloader)
-    print(f'==Averaged relative L2 error is: {test_l2}==\n'
+    print(f'==Averaged relative L2 error is: {loss_l2}==\n'
           f'==Averaged equation error is: {loss_f}==\n'
           f'==Averaged intial condition error is: {loss_ic}==')
     print(f'Time cost: {end_time - start_time} s')
