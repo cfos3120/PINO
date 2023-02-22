@@ -70,9 +70,9 @@ def eval_ns(model,  # model
             loss_dict['loss_ic'] += loss_ic.item()
 
                     # print losses to file
-            loss_ic_list.append(loss_ic)
-            loss_l2_list.append(loss_l2)
-            loss_f_list.append(loss_f)
+            loss_ic_list.append(loss_ic.item())
+            loss_l2_list.append(loss_l2.item())
+            loss_f_list.append(loss_f.item())
 
     end_time = default_timer()
     loss_l2 = loss_dict['test_l2'] / len(dataloader)
@@ -87,5 +87,5 @@ def eval_ns(model,  # model
     losses_total = [loss_ic_list,loss_l2_list,loss_f_list]
 
     print('Losses saving at %s' % config['test']['ckpt'][-3] + '_losses')
-    np.save(config['test']['ckpt'][:-3].cpu() + '_val_losses', losses_total)
+    np.save(config['test']['ckpt'][:-3] + '_val_losses', losses_total)
     print('Save Complete \n \n')
