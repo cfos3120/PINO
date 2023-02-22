@@ -86,5 +86,6 @@ def eval_ns(model,  # model
 
     losses_total = [loss_ic_list,loss_l2_list,loss_f_list]
 
+    print('Losses saving at %s' % config['test']['ckpt'][-3] + '_losses')
     np.save(config['test']['ckpt'][:-3].cpu() + '_val_losses', losses_total)
-    print('Losses saved at %s' % config['test']['ckpt'][-3] + '_losses \n \n')
+    print('Save Complete \n \n')
