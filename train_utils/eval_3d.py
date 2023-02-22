@@ -65,9 +65,9 @@ def eval_ns(model,  # model
                                               v, t_interval, lp_loss_factor)
             #loss_ic, loss_f = PINO_loss3d(out.view(batch_size, S, S, T), x, forcing, v, t_interval)
 
-            loss_dict['train_f'] += loss_f
-            loss_dict['test_l2'] += loss_l2
-            loss_dict['loss_ic'] += loss_ic
+            loss_dict['train_f'] += loss_f.item()
+            loss_dict['test_l2'] += loss_l2.item()
+            loss_dict['loss_ic'] += loss_ic.item()
 
                     # print losses to file
             loss_ic_list.append(loss_ic)
@@ -75,9 +75,9 @@ def eval_ns(model,  # model
             loss_f_list.append(loss_f)
 
     end_time = default_timer()
-    loss_l2 = loss_dict['test_l2'].item() / len(dataloader)
-    loss_f = loss_dict['train_f'].item() / len(dataloader)
-    loss_ic = loss_dict['loss_ic'].item() / len(dataloader)
+    loss_l2 = loss_dict['test_l2'] / len(dataloader)
+    loss_f = loss_dict['train_f'] / len(dataloader)
+    loss_ic = loss_dict['loss_ic'] / len(dataloader)
     print(f'==Averaged relative L2 error is: {loss_l2}==\n'
           f'==Averaged equation error is: {loss_f}==\n'
           f'==Averaged intial condition error is: {loss_ic}==')
