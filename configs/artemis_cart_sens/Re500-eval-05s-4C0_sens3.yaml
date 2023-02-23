@@ -1,13 +1,13 @@
 data:
-  datapath: '/project/MLFluids/NS_fine_Re500_T64_R256_sub1_cartesian.npy'
+  datapath: '/project/MLFluids/NS_Re500_s256_T100_test_cartesian.npy'
   Re: 500
-  total_num: 1
+  total_num: 100
   offset: 0
-  n_sample: 1
+  n_sample: 20
   time_interval: 0.5
   nx: 256
-  nt: 64
-  sub: 1
+  nt: 128
+  sub: 4
   sub_t: 1
   shuffle: False
 
