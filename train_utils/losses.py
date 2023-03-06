@@ -118,8 +118,10 @@ def FDM_NS_cartesian(u, u_0, nu=1/40, t_interval=1.0):
     u = u.reshape(batchsize, nx, ny, nt, 2)
 
     # Assuming uniform periodic spatial grid NOTE: These need to line up with the grid function made for training.
-    x = torch.arange(0,2*np.pi,2*np.pi/nx, device=device)
-    y = torch.arange(0,2*np.pi,2*np.pi/ny, device=device)
+    #x = torch.arange(0,2*np.pi,2*np.pi/nx, device=device)
+    #y = torch.arange(0,2*np.pi,2*np.pi/ny, device=device)
+    x = torch.arange(0,1.0,1.0/nx, device=device) #<- I think we can assume this (as we divide the domain by the reference length 2pi)
+    y = torch.arange(0,1.0,1.0/ny, device=device)
     t = torch.arange(0,nt*t_interval,t_interval, device=device)
 
     # each of these (dV_dx etc.) should come with shape (Batch,x,y,t,Velocity direction)
@@ -296,31 +298,35 @@ def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0, pde_loss_factor = 1):
     #Du = FDM_NS_vorticity(u, v, t_interval)
     #f = forcing.repeat(batchsize, 1, 1, nt-2)
     loss_eq1, loss_eq2, loss_eq3, loss_eq1_1, loss_eq1_2 = FDM_NS_cartesian(u, u0, v, t_interval)
-    f = forcing.reshape([1,nx,nx,1]).repeat(batchsize, 1, 1, nt)
+    f = forcing.reshape([1,nx,ny,1]).repeat(batchsize, 1, 1, nt)
     
-    if pde_loss_factor == 'mse':
-        loss1 = F.mse_loss(loss_eq1, f)
-        loss2 = F.mse_loss(loss_eq2, f)
-        loss3 = F.mse_loss(loss_eq3, torch.zeros_like(loss_eq3)) 
-    elif pde_loss_factor == 'combined':
-        loss1 = lploss(loss_eq2 + loss_eq1, f)
-        loss2 = lploss(loss_eq3 + loss_eq1, f)
-        loss3 = 0
-    elif pde_loss_factor == 'self_scaled':
-        loss1 = lploss(loss_eq1, f)
-        loss2 = lploss(loss_eq2, f)
-        loss3 = lploss(loss_eq1_1, -loss_eq1_2) 
-    else:
-        loss1 = lploss(loss_eq1, f)
-        loss2 = lploss(loss_eq2, f)
+    # if pde_loss_factor == 'mse':
+    #     loss1 = F.mse_loss(loss_eq1, f)
+    #     loss2 = F.mse_loss(loss_eq2, f)
+    #     loss3 = F.mse_loss(loss_eq3, torch.zeros_like(loss_eq3)) 
+    # elif pde_loss_factor == 'combined':
+    #     loss1 = lploss(loss_eq2 + loss_eq1, f)
+    #     loss2 = lploss(loss_eq3 + loss_eq1, f)
+    #     loss3 = 0
+    # elif pde_loss_factor == 'self_scaled':
+    #     loss1 = lploss(loss_eq1, f)
+    #     loss2 = lploss(loss_eq2, f)
+    #     loss3 = lploss(loss_eq1_1, -loss_eq1_2) 
+    # else:
+    #     loss1 = lploss(loss_eq1, f)
+    #     loss2 = lploss(loss_eq2, f)
 
         # Note lploss does not work comparing against zeros (it is the divisor) 
         # so we add an offset to the equation and compare to a ones matrix
-        loss3 = lploss(loss_eq3+pde_loss_factor, torch.ones_like(loss_eq3)*pde_loss_factor) 
+    #     loss3 = lploss(loss_eq3+pde_loss_factor, torch.ones_like(loss_eq3)*pde_loss_factor) 
     
+    loss1 = lploss.abs(loss_eq1, torch.zeros_like(loss_eq1))
+    loss2 = lploss.abs(loss_eq2, f)
+    loss3 = lploss.abs(loss_eq3, f)
+
     loss_f = loss1 + loss2 + loss3
     
-    return loss_ic, loss_f
+    return loss_ic, loss_f, loss1, loss2, loss3
 
 
 def PDELoss(model, x, t, nu):
