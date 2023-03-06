@@ -75,7 +75,6 @@ if __name__ == '__main__':
     v = 1 / config['data']['Re']
     S, T = loader.S, loader.T
     t_interval = config['data']['time_interval']
-    batch_size = config['test']['batchsize']
     batch_size = config['train']['batchsize']
     ic_weight = config['train']['ic_loss']
     f_weight = config['train']['f_loss']
