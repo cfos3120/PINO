@@ -189,8 +189,5 @@ if __name__ == '__main__':
     print('Saving trained Model')
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
-                    model, optimizer)
-
-    print('Losses saving at %s' % config['train']['ckpt'][-3] + '_losses')
-    np.save(config['train']['ckpt'][:-3] + '_training_losses', losses_total)
+                    model, optimizer, losses=losses_total)
     print('Training and Save Complete \n \n')
