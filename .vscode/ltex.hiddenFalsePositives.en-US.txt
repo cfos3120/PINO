@@ -1,0 +1,2 @@
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QDataset Generation\nSince it is chaotic constant forcing Kolmogorov flow\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QThis function is not a neural network autograd function.\\E$"}
