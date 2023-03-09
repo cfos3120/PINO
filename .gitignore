@@ -1,7 +1,8 @@
 data
 log
 .vscode
-__pycache__
+wandb
+**/__pycache__/**
 .idea
 figs
 checkpoints
@@ -10,3 +11,4 @@ checkpoints
 *.pt
 *.pth
 tensordiffeq
+exp

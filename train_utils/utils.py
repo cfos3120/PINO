@@ -99,7 +99,7 @@ def torch2dgrid(num_x, num_y, bot=(0,0), top=(1,1)):
     x_top, y_top = top
     x_arr = torch.linspace(x_bot, x_top, steps=num_x)
     y_arr = torch.linspace(y_bot, y_top, steps=num_y)
-    xx, yy = torch.meshgrid(x_arr, y_arr)
+    xx, yy = torch.meshgrid(x_arr, y_arr, indexing='ij')
     mesh = torch.stack([xx, yy], dim=2)
     return mesh
 
@@ -174,3 +174,28 @@ def save_checkpoint(path, name, model, optimizer=None):
     print('Checkpoint is saved at %s' % ckpt_dir + name)
 
 
+
+def save_ckpt(path, model, optimizer=None, scheduler=None):
+    model_state = model.state_dict()
+    if optimizer:
+        optim_state = optimizer.state_dict()
+    else:
+        optim_state = None
+    
+    if scheduler:
+        scheduler_state = scheduler.state_dict()
+    else:
+        scheduler_state = None
+    torch.save({
+        'model': model_state, 
+        'optim': optim_state, 
+        'scheduler': scheduler_state
+    }, path)
+    print(f'Checkpoint is saved to {path}')
+
+
+def dict2str(log_dict):
+    res = ''
+    for key, value in log_dict.items():
+        res += f'{key}: {value}|'
+    return res

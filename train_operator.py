@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 
 from solver.random_fields import GaussianRF
 from train_utils import Adam
-from train_utils.datasets import NSLoader, online_loader, DarcyFlow
+from train_utils.datasets import NSLoader, online_loader, DarcyFlow, DarcyCombo
 from train_utils.train_3d import mixed_train
 from train_utils.train_2d import train_2d_operator
-from models import FNN3d, FNN2d
+from models import FNO3d, FNO2d
 
 
 def train_3d(args, config):
@@ -43,11 +43,12 @@ def train_3d(args, config):
                              batchsize=config['train']['batchsize'])
     # create model
     print(device)
-    model = FNN3d(modes1=config['model']['modes1'],
+    model = FNO3d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   modes3=config['model']['modes3'],
                   fc_dim=config['model']['fc_dim'],
-                  layers=config['model']['layers']).to(device)
+                  layers=config['model']['layers'], 
+                  act=config['model']['act']).to(device)
     # Load from checkpoint
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']
@@ -70,23 +71,31 @@ def train_3d(args, config):
                 config,
                 device,
                 log=args.log,
-                project=config['others']['project'],
-                group=config['others']['group'])
+                project=config['log']['project'],
+                group=config['log']['group'])
 
 
 def train_2d(args, config):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     data_config = config['data']
 
-    dataset = DarcyFlow(data_config['datapath'],
-                        nx=data_config['nx'], sub=data_config['sub'],
-                        offset=data_config['offset'], num=data_config['n_sample'])
+    # dataset = DarcyFlow(data_config['datapath'],
+                        # nx=data_config['nx'], sub=data_config['sub'],
+                        # offset=data_config['offset'], num=data_config['n_sample'])
+
+    dataset = DarcyCombo(datapath=data_config['datapath'], 
+                         nx=data_config['nx'], 
+                         sub=data_config['sub'], 
+                         pde_sub=data_config['pde_sub'], 
+                         num=data_config['n_samples'], 
+                         offset=data_config['offset'])
     train_loader = DataLoader(dataset, batch_size=config['train']['batchsize'], shuffle=True)
-    model = FNN2d(modes1=config['model']['modes1'],
+    model = FNO2d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   fc_dim=config['model']['fc_dim'],
                   layers=config['model']['layers'],
-                  activation=config['model']['activation']).to(device)
+                  act=config['model']['act'], 
+                  pad_ratio=config['model']['pad_ratio']).to(device)
     # Load from checkpoint
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']
@@ -95,7 +104,7 @@ def train_2d(args, config):
         print('Weights loaded from %s' % ckpt_path)
 
     optimizer = Adam(model.parameters(), betas=(0.9, 0.999),
-                         lr=config['train']['base_lr'])
+                     lr=config['train']['base_lr'])
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                      milestones=config['train']['milestones'],
                                                      gamma=config['train']['scheduler_gamma'])
@@ -103,8 +112,8 @@ def train_2d(args, config):
                       train_loader,
                       optimizer, scheduler,
                       config, rank=0, log=args.log,
-                      project=config['others']['project'],
-                      group=config['others']['group'])
+                      project=config['log']['project'],
+                      group=config['log']['group'])
 
 
 if __name__ == '__main__':

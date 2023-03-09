@@ -4,7 +4,7 @@ import random
 
 import torch
 
-from models import FNN2d
+from models import FNO2d
 from train_utils import Adam
 from torch.utils.data import DataLoader
 from train_utils.datasets import DarcyFlow
@@ -21,11 +21,11 @@ def train(args, config):
                         nx=data_config['nx'], sub=data_config['sub'],
                         offset=data_config['offset'], num=data_config['n_sample'])
     dataloader = DataLoader(dataset, batch_size=config['train']['batchsize'])
-    model = FNN2d(modes1=config['model']['modes1'],
+    model = FNO2d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   fc_dim=config['model']['fc_dim'],
                   layers=config['model']['layers'],
-                  activation=config['model']['activation']).to(device)
+                  act=config['model']['act']).to(device)
     # Load from checkpoint
     if 'ckpt' in config['train']:
         ckpt_path = config['train']['ckpt']
@@ -41,8 +41,8 @@ def train(args, config):
                       dataloader,
                       optimizer, scheduler,
                       config, rank=0, log=args.log,
-                      project=config['others']['project'],
-                      group=config['others']['group'])
+                      project=config['log']['project'],
+                      group=config['log']['group'])
 
 
 if __name__ == '__main__':

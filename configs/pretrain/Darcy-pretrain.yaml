@@ -6,13 +6,14 @@ data:
   n_sample: 1000
   nx: 421
   sub: 7
+  pde_sub: 2
 
 model:
   layers: [64, 64, 64, 64, 64]
   modes1: [20, 20, 20, 20]
   modes2: [20, 20, 20, 20]
   fc_dim: 128
-  activation: gelu
+  act: gelu
 
 train:
   batchsize: 20
@@ -25,8 +26,9 @@ train:
   save_dir: 'darcy-FDM'
   save_name: 'darcy-pretrain-pino.pt'
 
-others:
+log:
   project: 'PINO-Darcy-pretrain'
   group: 'gelu-pino'
+  entity: hzzheng-pino
 
 

@@ -1,15 +1,16 @@
 import torch.nn as nn
-from .basics import SpectralConv1d, _get_act
+from .basics import SpectralConv1d
+from .utils import _get_act
 
 
-class FNN1d(nn.Module):
+class FNO1d(nn.Module):
     def __init__(self,
                  modes, width=32,
                  layers=None,
                  fc_dim=128,
                  in_dim=2, out_dim=1,
-                 activation='relu'):
-        super(FNN1d, self).__init__()
+                 act='relu'):
+        super(FNO1d, self).__init__()
 
         """
         The overall network. It contains several layers of the Fourier layer.
@@ -39,7 +40,7 @@ class FNN1d(nn.Module):
 
         self.fc1 = nn.Linear(layers[-1], fc_dim)
         self.fc2 = nn.Linear(fc_dim, out_dim)
-        self.activation = _get_act(activation)
+        self.act = _get_act(act)
 
     def forward(self, x):
         length = len(self.ws)
@@ -52,11 +53,11 @@ class FNN1d(nn.Module):
             x2 = w(x)
             x = x1 + x2
             if i != length - 1:
-                x = self.activation(x)
+                x = self.act(x)
 
         x = x.permute(0, 2, 1)
         x = self.fc1(x)
-        x = self.activation(x)
+        x = self.act(x)
         x = self.fc2(x)
         return x
 

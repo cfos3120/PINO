@@ -41,7 +41,7 @@ def train_2d_operator(model,
     '''
     if rank == 0 and wandb and log:
         run = wandb.init(project=project,
-                         entity='hzzheng-pino',
+                         entity=config['log']['entity'],
                          group=group,
                          config=config,
                          tags=tags, reinit=True,
@@ -57,20 +57,24 @@ def train_2d_operator(model,
     mesh = train_loader.dataset.mesh
     mollifier = torch.sin(np.pi * mesh[..., 0]) * torch.sin(np.pi * mesh[..., 1]) * 0.001
     mollifier = mollifier.to(rank)
+    pde_mesh = train_loader.dataset.pde_mesh
+    pde_mol = torch.sin(np.pi * pde_mesh[..., 0]) * torch.sin(np.pi * pde_mesh[..., 1]) * 0.001
+    pde_mol = pde_mol.to(rank)
     for e in pbar:
         loss_dict = {'train_loss': 0.0,
                      'data_loss': 0.0,
                      'f_loss': 0.0,
                      'test_error': 0.0}
-        for x, y in train_loader:
-            x, y = x.to(rank), y.to(rank)
+        for data_ic, u, pde_ic in train_loader:
+            data_ic, u, pde_ic = data_ic.to(rank), u.to(rank), pde_ic.to(rank)
 
             optimizer.zero_grad()
 
-            pred = model(x).reshape(y.shape)
-            pred = pred * mollifier
-
-            data_loss = myloss(pred, y)
+            # data loss
+            if data_weight > 0:
+                pred = model(data_ic).squeeze(dim=-1)
+                pred = pred * mollifier
+                data_loss = myloss(pred, y)
 
             a = x[..., 0]
             f_loss = darcy_loss(pred, a)
@@ -113,7 +117,7 @@ def train_2d_operator(model,
 
 
 def train_2d_burger(model,
-                    train_loader,
+                    train_loader, v,
                     optimizer, scheduler,
                     config,
                     rank=0, log=False,
@@ -123,7 +127,7 @@ def train_2d_burger(model,
                     use_tqdm=True):
     if rank == 0 and wandb and log:
         run = wandb.init(project=project,
-                         entity='hzzheng-pino',
+                         entity=config['log']['entity'],
                          group=group,
                          config=config,
                          tags=tags, reinit=True,
@@ -149,7 +153,7 @@ def train_2d_burger(model,
             out = model(x).reshape(y.shape)
             data_loss = myloss(out, y)
 
-            loss_u, loss_f = PINO_loss(out, x[:, 0, :, 0])
+            loss_u, loss_f = PINO_loss(out, x[:, 0, :, 0], v)
             total_loss = loss_u * ic_weight + loss_f * f_weight + data_loss * data_weight
 
             optimizer.zero_grad()

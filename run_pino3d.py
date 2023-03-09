@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from train_utils import Adam, NSLoader, get_forcing
 from train_utils.train_3d import train
 
-from models import FNN3d
+from models import FNO3d
 from argparse import ArgumentParser
 from train_utils.utils import requires_grad
 
@@ -16,7 +16,7 @@ def run_instance(loader, config, data_config):
     trainset = loader.make_dataset(data_config['n_sample'],
                                    start=data_config['offset'])
     train_loader = DataLoader(trainset, batch_size=config['train']['batchsize'])
-    model = FNN3d(modes1=config['model']['modes1'],
+    model = FNO3d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   modes3=config['model']['modes3'],
                   fc_dim=config['model']['fc_dim'],
@@ -49,16 +49,17 @@ def run_instance(loader, config, data_config):
                                                      milestones=config['train']['milestones'],
                                                      gamma=config['train']['scheduler_gamma'])
     forcing = get_forcing(loader.S).to(device)
+    profile = config['train']['profile'] if 'profile' in config['train'] else False
     train(model,
           loader, train_loader,
           optimizer, scheduler,
           forcing, config,
           rank=0,
           log=options.log,
-          project=config['others']['project'],
-          group=config['others']['group'],
+          project=config['log']['project'],
+          group=config['log']['group'],
           use_tqdm=True,
-          profile=config['train']['profile'])
+          profile=profile)
 
 
 if __name__ == '__main__':
