@@ -8,6 +8,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+import os
 
 import matplotlib.pyplot as plt
 
@@ -350,13 +351,35 @@ for ep in range(5000):
     t2 = default_timer()
     print(ep, t2-t1, IC.item(), BC.item(), E1.item(),  E2.item(), E3.item(), loss_l2.item())
 
-    if ep % 1000 == 500:
-        y_plot = y[0,:,:,:].cpu().numpy()
-        out_plot = out[0,:S,:S,:T].detach().cpu().numpy()
+    #if ep % 1000 == 500:
+        # y_plot = y[0,:,:,:].cpu().numpy()
+        # out_plot = out[0,:S,:S,:T].detach().cpu().numpy()
 
-        fig, ax = plt.subplots(2, 2)
-        ax[0,0].imshow(y_plot[..., -1, 0])
-        ax[0,1].imshow(y_plot[..., -1, 1])
-        ax[1,0].imshow(out_plot[..., -1, 0])
-        ax[1,1].imshow(out_plot[..., -1, 1])
-        plt.show()
+        # fig, ax = plt.subplots(2, 2)
+        # ax[0,0].imshow(y_plot[..., -1, 0])
+        # ax[0,1].imshow(y_plot[..., -1, 1])
+        # ax[1,0].imshow(out_plot[..., -1, 0])
+        # ax[1,1].imshow(out_plot[..., -1, 1])
+        # plt.show()
+
+# Save Model
+folder_name = 'cavity_flow'
+file_name = 'cavity_v1'
+ckpt_dir = 'checkpoints/%s/' % folder_name
+if not os.path.exists(ckpt_dir):
+    os.makedirs(ckpt_dir)
+try:
+    model_state_dict = model.module.state_dict()
+except AttributeError:
+    model_state_dict = model.state_dict()
+
+if optimizer is not None:
+    optim_dict = optimizer.state_dict()
+else:
+    optim_dict = 0.0
+
+torch.save({
+    'model': model_state_dict,
+    'optim': optim_dict
+}, ckpt_dir + file_name)
+print('Checkpoint is saved at %s' % ckpt_dir + file_name)
