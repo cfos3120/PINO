@@ -10,8 +10,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 
-import matplotlib.pyplot as plt
-
 from timeit import default_timer
 from torch.optim import Adam
 from train_utils.datasets import MatReader
@@ -142,7 +140,7 @@ class FNO3d(nn.Module):
         x2 = self.w3(x)
         x = x1 + x2
 
-        x = x[:, :, :-self.padding, :-self.padding, :-self.padding]
+        #x = x[:, :, :-self.padding, :-self.padding, :-self.padding]
         x = x.permute(0, 2, 3, 4, 1)  # pad the domain if input is non-periodic
         x = self.fc2(x)
         x = F.tanh(x)
