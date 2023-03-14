@@ -12,16 +12,11 @@ import os
 
 import matplotlib.pyplot as plt
 
-
 from timeit import default_timer
 from torch.optim import Adam
 from train_utils.datasets import MatReader
 from train_utils.losses import LpLoss
 from train_utils.utils import count_params
-
-torch.manual_seed(0)
-np.random.seed(0)
-
 
 ################################################################
 # 3d fourier layers
@@ -81,7 +76,6 @@ class SpectralConv3d(nn.Module):
         x = torch.fft.irfftn(out_ft, s=(x.size(-3), x.size(-2), x.size(-1)))
         return x
 
-
 class FNO3d(nn.Module):
     def __init__(self, modes1, modes2, modes3, width, padding):
         super(FNO3d, self).__init__()
@@ -118,7 +112,7 @@ class FNO3d(nn.Module):
         self.w3 = nn.Conv3d(self.width, self.width, 1)
 
         self.fc2 = nn.Linear(self.width, 128)
-        self.fc3 = nn.Linear(128, 3)
+        self.fc3 = nn.Linear(128, 2) #nn.Linear(128, 3)
 
     def forward(self, x):
         grid = self.get_grid(x.shape, x.device)
@@ -148,7 +142,7 @@ class FNO3d(nn.Module):
         x2 = self.w3(x)
         x = x1 + x2
 
-        # x = x[:, :, :-self.padding, :-self.padding, :-self.padding]
+        x = x[:, :, :-self.padding, :-self.padding, :-self.padding]
         x = x.permute(0, 2, 3, 4, 1)  # pad the domain if input is non-periodic
         x = self.fc2(x)
         x = F.tanh(x)
@@ -164,55 +158,6 @@ class FNO3d(nn.Module):
         gridz = torch.tensor(np.linspace(0, 1, size_z), dtype=torch.float)
         gridz = gridz.reshape(1, 1, 1, size_z, 1).repeat([batchsize, size_x, size_y, 1, 1])
         return torch.cat((gridx, gridy, gridz), dim=-1).to(device)
-
-
-################################################################
-# configs
-################################################################
-
-
-
-# PATH = '../data/cavity.mat'
-# PATH = '../data/lid-cavity.mat'
-PATH = '/project/MLFluids/cavity.mat'
-ntest = 1
-
-modes = 8
-width = 32
-
-batch_size = 1
-
-path = 'cavity'
-path_model = 'model/' + path
-path_train_err = 'results/' + path + 'train.txt'
-path_test_err = 'results/' + path + 'test.txt'
-path_image = 'image/' + path
-
-
-
-sub_s = 4
-sub_t = 20
-S = 256 // sub_s
-T_in = 1000 # 1000*0.005 = 5s
-T = 50 # 1000 + 50*20*0.005 = 10s
-padding = 14
-
-################################################################
-# load data
-################################################################
-
-# 15s, 3000 frames
-reader = MatReader(PATH)
-data_u = reader.read_field('u')[T_in:T_in+T*sub_t:sub_t, ::sub_s, ::sub_s].permute(1,2,0)
-data_v = reader.read_field('v')[T_in:T_in+T*sub_t:sub_t, ::sub_s, ::sub_s].permute(1,2,0)
-
-data_output = torch.stack([data_u, data_v],dim=-1).reshape(batch_size,S,S,T,2)
-data_input = data_output[:,:,:,:1,:].repeat(1,1,1,T,1).reshape(batch_size,S,S,T,2)
-
-print(data_output.shape)
-
-
-device = torch.device('cuda')
 
 def PINO_loss_Fourier_f(out, Re=500):
     pi = np.pi
@@ -286,8 +231,6 @@ def PINO_loss_FDM_f(out, Re=500):
 
     return E1, E2, E3
 
-
-
 def PINO_loss_ic(out, y):
     myloss = LpLoss(size_average=True)
     # target = torch.zeros(out.shape, device=out.device)
@@ -319,67 +262,94 @@ def PINO_loss_bc(out, y):
 ################################################################
 
 
+if __name__ == '__main__':
+    
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    torch.manual_seed(0)
+    np.random.seed(0)
 
-model = model = FNO3d(modes, modes, modes, width, padding).cuda()
-print(count_params(model))
+    ################################################################
+    # configs
+    ################################################################
 
-optimizer = Adam(model.parameters(), lr=0.0025, weight_decay=0)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.5)
+    # PATH = '../data/cavity.mat'
+    # PATH = '../data/lid-cavity.mat'
+    PATH = '/project/MLFluids/cavity.mat'
+    ntest = 1
 
-myloss = LpLoss(size_average=False)
-model.train()
-x = data_input.cuda().reshape(batch_size,S,S,T,2)
-y = data_output.cuda().reshape(batch_size,S,S,T,2)
+    modes = 8
+    width = 32
 
-for ep in range(5000):
-    t1 = default_timer()
-    optimizer.zero_grad()
+    batch_size = 1
 
-    out = model(x)
+    path = 'cavity'
+    path_model = 'model/' + path
+    path_train_err = 'results/' + path + 'train.txt'
+    path_test_err = 'results/' + path + 'test.txt'
+    path_image = 'image/' + path
 
-    loss_l2 = myloss(out[:,:S,:S,:T,:2], y)
-    IC = PINO_loss_ic(out[:,:S,:S,0,:2], y[:,:,:,0])
-    BC = PINO_loss_bc(out[:,:S,:S,:T,:2], y)
-    E1, E2, E3 = PINO_loss_Fourier_f(out)
-    # E1, E2, E3 = PINO_loss_FDM_f(out)
-    loss_pino = IC*1 + BC*1 + E1*1 + E2*1 + E3*1
+    sub_s = 4
+    sub_t = 20
+    S = 256 // sub_s
+    T_in = 1000 # 1000*0.005 = 5s
+    T = 50 # 1000 + 50*20*0.005 = 10s
+    padding = 14
 
-    loss_pino.backward()
+    ################################################################
+    # load data
+    ################################################################
 
-    optimizer.step()
-    scheduler.step()
-    t2 = default_timer()
-    print(ep, t2-t1, IC.item(), BC.item(), E1.item(),  E2.item(), E3.item(), loss_l2.item())
+    # 15s, 3000 frames
+    reader = MatReader(PATH)
+    data_u = reader.read_field('u')[T_in:T_in+T*sub_t:sub_t, ::sub_s, ::sub_s].permute(1,2,0)
+    data_v = reader.read_field('v')[T_in:T_in+T*sub_t:sub_t, ::sub_s, ::sub_s].permute(1,2,0)
 
-    #if ep % 1000 == 500:
-        # y_plot = y[0,:,:,:].cpu().numpy()
-        # out_plot = out[0,:S,:S,:T].detach().cpu().numpy()
+    data_output = torch.stack([data_u, data_v],dim=-1).reshape(batch_size,S,S,T,2)
+    data_input = data_output[:,:,:,:1,:].repeat(1,1,1,T,1).reshape(batch_size,S,S,T,2)
 
-        # fig, ax = plt.subplots(2, 2)
-        # ax[0,0].imshow(y_plot[..., -1, 0])
-        # ax[0,1].imshow(y_plot[..., -1, 1])
-        # ax[1,0].imshow(out_plot[..., -1, 0])
-        # ax[1,1].imshow(out_plot[..., -1, 1])
-        # plt.show()
+    print(data_output.shape)
 
-# Save Model
-folder_name = 'cavity_flow'
-file_name = 'cavity_v1'
-ckpt_dir = 'checkpoints/%s/' % folder_name
-if not os.path.exists(ckpt_dir):
-    os.makedirs(ckpt_dir)
-try:
-    model_state_dict = model.module.state_dict()
-except AttributeError:
-    model_state_dict = model.state_dict()
+    model = model = FNO3d(modes, modes, modes, width, padding).cuda()
+    print(count_params(model))
 
-if optimizer is not None:
-    optim_dict = optimizer.state_dict()
-else:
-    optim_dict = 0.0
+    optimizer = Adam(model.parameters(), lr=0.0025, weight_decay=0)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.5)
 
-torch.save({
-    'model': model_state_dict,
-    'optim': optim_dict
-}, ckpt_dir + file_name)
-print('Checkpoint is saved at %s' % ckpt_dir + file_name)
+    myloss = LpLoss(size_average=False)
+    model.train()
+    x = data_input.cuda().reshape(batch_size,S,S,T,2)
+    y = data_output.cuda().reshape(batch_size,S,S,T,2)
+
+    for ep in range(5000):
+        t1 = default_timer()
+        optimizer.zero_grad()
+
+        out = model(x)
+
+        loss_l2 = myloss(out[:,:S,:S,:T,:2], y)
+        IC = PINO_loss_ic(out[:,:S,:S,0,:2], y[:,:,:,0])
+        BC = PINO_loss_bc(out[:,:S,:S,:T,:2], y)
+        E1, E2, E3 = PINO_loss_Fourier_f(out)
+        # E1, E2, E3 = PINO_loss_FDM_f(out)
+        loss_pino = IC*1 + BC*1 + E1*1 + E2*1 + E3*1
+
+        loss_pino.backward()
+
+        optimizer.step()
+        scheduler.step()
+        t2 = default_timer()
+        print(ep, t2-t1, IC.item(), BC.item(), E1.item(),  E2.item(), E3.item(), loss_l2.item())
+
+    # Save Model
+    folder_name = 'cavity_flow'
+    file_name = 'cavity_v1'
+    ckpt_dir = 'checkpoints/%s/' % folder_name
+    if not os.path.exists(ckpt_dir): os.makedirs(ckpt_dir)
+    try: model_state_dict = model.module.state_dict()
+    except AttributeError: model_state_dict = model.state_dict()
+
+    if optimizer is not None: optim_dict = optimizer.state_dict()
+    else: optim_dict = 0.0
+
+    torch.save({'model': model_state_dict,'optim': optim_dict}, ckpt_dir + file_name)
+    print('Checkpoint is saved at %s' % ckpt_dir + file_name)
